@@ -2,7 +2,7 @@ import torch.utils.data as data
 from PIL import Image
 import data.util as util
 import random
-import torchvision.transforms as transforms
+import torchvision.transforms as tr
 import numpy as np
 import torch
 
@@ -24,23 +24,49 @@ def default_flist_reader(flist):
 # opt
 # image_list | mask_flist | fineSize | mask_type | mask_pos | vertical_margin | horizontal_margin | max_delta_height | max_delta_width | center_crop
 
+def get_transform(opt, subset, *,
+                  mean=(0.5, 0.5, 0.5),
+                  std=(0.5, 0.5, 0.5),
+                  brightness_jitter = 0.4,
+                  contrast_jitter = 0.4,
+                  saturation_jitter = 0.4
+                  ):
+    size = opt['img_shape'][1:]
+    if subset == "train":
+        return tr.Compose([
+            tr.Resize(int(min(size) / 0.875)),
+            tr.RandomCrop(size),
+            tr.RandomHorizontalFlip(),
+
+            tr.ColorJitter(brightness_jitter, contrast_jitter, saturation_jitter),
+            tr.ToTensor(),
+            tr.Normalize(mean, std)
+        ])
+
+    return tr.Compose([
+            tr.Resize(min(size)),
+            tr.CenterCrop(size),
+            tr.ToTensor(),
+            tr.Normalize(mean, std)
+        ])
+
 class ImageFilelist(data.Dataset):
-    def __init__(self, opt, flist_reader=default_flist_reader, loader=default_loader):
+    def __init__(self, opt, flist_reader=default_flist_reader, loader=default_loader, transform=None):
         self.imlist = flist_reader(opt['image_list'])
         self.loader = loader
         self.opt = opt
 
-        transform_list = [transforms.ToTensor(),
-                          transforms.Normalize((0.5, 0.5, 0.5),
-                                               (0.5, 0.5, 0.5))]  # [0, 1] --> [-1, 1]
-        self.transform = transforms.Compose(transform_list)
+        self.transform = transform
+        if self.transform is None:
+            self.transform = get_transform(self.opt)["val"]
+
         if opt['mask_list'] is not None and opt['mask_type'] == 'irregular':
             self.mask_data = flist_reader(opt['mask_list'])
 
     def __getitem__(self, index):
         impath = self.imlist[index]
         img = self.loader(impath)
-        img = self.resize(img, self.opt['img_shape'][2], self.opt['img_shape'][1])
+        # img = self.resize(img, self.opt['img_shape'][2], self.opt['img_shape'][1])
         img_tensor = self.transform(img)  # Tensor [C, H, W], [-1, 1]
         if self.opt['mask_type'] == 'regular':
             bbox_tensor, mask_tensor = self.load_mask(index)  # Tensor [1, H, W]

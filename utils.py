@@ -6,7 +6,7 @@ import numpy as np
 
 def get_config(config):
     with open(config, 'r') as stream:
-        return yaml.load(stream)
+        return yaml.safe_load(stream)
 
 
 def _write_images(images, display_image_num, file_name):  # images is a list that contains tensors with shape [N,C,H,W]
@@ -22,7 +22,7 @@ def write_one_row_html(html_file, iterations, img_filename, all_size):
             <a href="%s">
                 <img scr="%s" style="width:%dpx">
             </a></br>
-        </p> 
+        </p>
         """ % (img_filename, img_filename, all_size))
     return
 

@@ -242,26 +242,26 @@ class InpaintingModel(BaseModel):
         # Generator
         s, n = self.get_network_description(self.netG)
         print('Network G with parameters: {:,d}'.format(n))
-        print(s)
+        # print(s)
 
         if self.is_train:
             # Discriminator
             s, n = self.get_network_description(self.netD)
             print('Discriminator D with parameters: {:,d}'.format(n))
-            print(s)
+            # print(s)
 
         if self.cri_fea:
             s, n = self.get_network_description(self.vgg)
             print('Vgg19 with parameters: {:,d}'.format(n))
-            print(s)
+            # print(s)
 
     def load(self):
         load_path_G = self.opt['pretrained_model_G']
-        if load_path_G is not '':
+        if load_path_G != '':
             print('Loading pretrained model for G [{:s}] ...'.format(load_path_G))
             self.load_network(load_path_G, self.netG)
         load_path_D = self.opt["pretrained_model_D"]
-        if load_path_D is not '':
+        if load_path_D != '':
             print('Loading pretrained model for D [{:s}] ...'.format(load_path_D))
             self.load_network(load_path_D, self.netD)
 

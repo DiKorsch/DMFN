@@ -8,7 +8,7 @@ from data.util import tensor2img
 import skimage.io as sio
 import numpy as np
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/celeba-hq-regular_list.yaml', help="net configuration")
 parser.add_argument('--output_folder', type=str, default='outputs/celebahq-regular/saved_images', help="output image path")
@@ -34,7 +34,7 @@ print('Loading the checkpoint for G [{:s}] ...'.format(opts.checkpoint))
 
 with torch.no_grad():
     dataset_opt = config['datasets']['test']
-    test_set = create_dataset(dataset_opt)
+    test_set = create_dataset(dataset_opt, "test")
     test_loader = create_dataloader(test_set, dataset_opt)
     print('Number of test images in [{:s}]: {:d}'.format(dataset_opt['name'], len(test_set)))
 

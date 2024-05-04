@@ -12,7 +12,7 @@ parser.add_argument('--config', type=str, default='configs/paris-celeba-hq-regul
 parser.add_argument('--output_path', type=str, default='.', help='output path of the tensorboard file')
 args = parser.parse_args()
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 config = get_config(args.config)
 torch.backends.cudnn.benchmark = True
 
@@ -27,7 +27,7 @@ config['checkpoint_dir'] = checkpoint_dir
 # create train and val dataloader
 for phase, dataset_opt in config['datasets'].items():
     if phase == 'train':
-        train_set = create_dataset(dataset_opt)
+        train_set = create_dataset(dataset_opt, phase)
         train_size = int(math.ceil(len(train_set) / dataset_opt['batch_size']))
         print('Number of training images: {:,d}, iters: {:,d}'.format(len(train_set), train_size))
         total_iters = int(dataset_opt['n_iter'])
@@ -35,7 +35,7 @@ for phase, dataset_opt in config['datasets'].items():
         print('Total epochs needed: {:d} for iters {:,d}'.format(total_epochs, total_iters))
         train_loader = create_dataloader(train_set, dataset_opt)
     elif phase == 'val':
-        val_set = create_dataset(dataset_opt)
+        val_set = create_dataset(dataset_opt, phase)
         val_loader = create_dataloader(val_set, dataset_opt)
         print('Number of val images in [{:s}]: {:d}'.format(dataset_opt['name'], len(val_set)))
     elif phase == 'test':
@@ -55,12 +55,13 @@ for epoch in range(start_epoch, total_epochs):
         current_step += 1
         if current_step > total_iters:
             break
-        # updating learning rate
-        model.update_learning_rate()
 
         # training
         model.feed_data(train_data)
         model.optimize_parameters()
+
+        # updating learning rate
+        model.update_learning_rate()
 
         # log
         if current_step % config['log_iter'] == 0:
